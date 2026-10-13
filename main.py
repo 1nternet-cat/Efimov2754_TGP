@@ -1,10 +1,10 @@
-from fitsData import fitsData
+from fitsData import fitsData, asteroid
 import numpy as np
 import os
 import imageio.v2 as iio
 import matplotlib.pyplot as plt
 
-class joinData(fitsData):
+class asteroid_list(fitsData):
     def __init__(self, file_arr, name_structure="Plots/temp"):
         self.data_arr = np.array([fitsData(file) for file in file_arr])
         self.name_structure = name_structure
@@ -28,7 +28,14 @@ class joinData(fitsData):
 def main():
     files = os.listdir("Fits_Files")
     paths = np.array([f"Fits_Files/{file}" for file in files])
-    data = joinData(paths)
-    data.makeGif("thegif.gif")
+    #data = Asteroid(paths)
+    #data.makeGif("thegif.gif")
+
+    data = asteroid(paths[0])
+    data.crop()
+    data.findAsteroid()
+    data.plotAsteroid("Plot.png")
+
+
 
 main()
