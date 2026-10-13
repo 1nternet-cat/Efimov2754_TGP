@@ -18,11 +18,13 @@ class fitsData():
     def getinfo(self):
         return self.hdul.info()
     
-    def plotImage(self, file):
+    def plotImage(self):
         # Using the simple norm style to create plots visible
-        fig, ax = plt.subplots()
-
+        self.fig, ax = plt.subplots()
         norm = SimpleNorm("sqrt", percent=95, clip=True)
         axim = norm.imshow(self.image, ax=ax)
-        fig.colorbar(axim)
-        fig.savefig(file)
+        self.fig.colorbar(axim)
+
+    def savePlot(self, file):
+        self.fig.savefig(file)
+        plt.close()
