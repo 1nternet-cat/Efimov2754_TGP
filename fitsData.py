@@ -3,9 +3,8 @@
 import numpy as np
 from astropy.io import fits
 import matplotlib.pyplot as plt
-import matplotlib.patches as patch
 from astropy.visualization import astropy_mpl_style
-from astropy.visualization import SimpleNorm
+from astropy.visualization import SimpleNorm, simple_norm
 from photutils.aperture import CircularAperture
 plt.style.use(astropy_mpl_style)
 
@@ -36,7 +35,8 @@ class fitsData():
 
     def savePlot(self, file):
         self.fig.savefig(file)
-        plt.close()
+        #closes figure so memory dosent fill up when dealing with multiple plots
+        plt.close() 
 
 class asteroid(fitsData):
     def __init__(self, file):
@@ -44,23 +44,42 @@ class asteroid(fitsData):
 
     def findAsteroid(self):
         """Look for point-like sources in the centre of the image"""
-        # find centre and take the 5% region of the image around that
+        # find centre and take the 2.5% region of the image around that
         c = int(self.image.shape[0] / 2)
-        percent = int(self.image.shape[0] / 20)
+        percent = int(self.image.shape[0] / 40)
         centre_r = self.image[c - percent: c + percent, c - percent: c + percent]
 
+        # mask everything but the middle
         mask = np.full(self.image.shape, True)
         mask[c - percent: c + percent, c - percent: c + percent] = False
 
-        daofind = daost(500, fwhm=2.5)
-        self.sources = daofind(self.image, mask=mask, )
-        print(self.sources)
+        # using DAOStarFinder object to search
+        daofind = daost(350, fwhm=2.5)
+        sources = daofind(self.image, mask=mask)
+
+        # if multiple sources are found, only record the highest count one
+        if len(sources) > 1:
+            pos = np.where(sources["peak"] == np.max(sources["peak"]))[0]
+            print(f"Position from multiple at: {pos}")
+            self.source = sources[pos]
+
+        else:
+            self.source = sources
+
+        print(self.source)
 
     def plotAsteroid(self, file):
-        positions = np.transpose((self.sources['x_centroid'], self.sources['y_centroid']))
-        apertures = CircularAperture(positions, r=10.0)
-        self.plotImage()
-        p1 = apertures.plot(ax = self.ax)
-        self.savePlot(file)
+        try:
+            positions = np.transpose((self.source['x_centroid'], self.source['y_centroid']))
+            fig, ax = plt.subplots()
+            apertures = CircularAperture(positions, r=50.0)
+            norm = simple_norm(self.image, 'sqrt', percent=99)
+            axim = ax.imshow(self.image, norm=norm, origin='lower')
+            apertures.plot(ax=ax, color='red')
+            plt.savefig(file)
+            plt.close()
+
+        except:
+            print("empty frame...")
 
     
