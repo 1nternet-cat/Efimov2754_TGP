@@ -1,4 +1,4 @@
-from fitsData import fitsData, asteroid
+from asteroid import asteroid
 import numpy as np
 import os
 import imageio.v2 as iio
@@ -33,6 +33,14 @@ class asteroid_list():
             asteroid.plotAsteroid(pltname)
 
         self.loopAsteroid(plotFunc)
+
+    def centreImages(self):
+        def func(asteroid, pltname):
+            _, image = asteroid.centreImage()
+            asteroid.plotImage(image)
+            asteroid.savePlot(pltname)
+
+        self.loopAsteroid(func)
             
     def makeGif(self, filename):
         frames = [iio.imread(f"{self.name_structure}{i}.png") for i in range(len(self.asteroids))]
@@ -43,7 +51,7 @@ class asteroid_list():
             csvwriter = csv.writer(file)
             for asteroid in self.asteroids:
                 asteroid.findAsteroid()
-                csvwriter.writerow(asteroid.source)
+                csvwriter.writerow([asteroid.source["x_centroid"], asteroid.source["y_centroid"]])
 
     def cropFrames(self):
         for asteroid in self.asteroids:
@@ -54,13 +62,18 @@ def main():
     files = os.listdir("Fits_Files")
     paths = np.array([f"Fits_Files/{file}" for file in files])
 
-    asteroids = asteroid_list(paths, name_structure="DetectionPlots/plot")
-    asteroids.cropFrames()
+    asteroids = asteroid_list(paths, "CentredPlots/plot")
     asteroids.findAsteroidFrames()
-    asteroids.plotAndSaveDetections()
-    asteroids.makeGif("detectionGif.gif")
+    asteroids.centreImages()
+    asteroids.makeGif("centredGif.gif")
 
+
+    #ast = asteroid(paths[0])
+    #ast.findAsteroid()
+    #pos, img = ast.centreImage()
+    #ast.plotImage(img)
+    #ast.savePlot("somethinghere.png")
+    #ast.findAsteroid()
+    #radii, profile, profile_err = ast.radialPlot(25)
     
-
-
 main()

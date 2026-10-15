@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from photutils.aperture import CircularAperture
 from photutils.detection import DAOStarFinder as daost
+from photutils.profiles import RadialProfile # for radial profile
 
 from astropy.visualization import simple_norm
 from astropy.visualization import astropy_mpl_style
@@ -51,3 +52,22 @@ class asteroid(fitsData):
         apertures.plot(ax=ax, color='red')
         plt.savefig(filename)
         plt.close() # close for saving memory
+
+    def centreImage(self):
+        pos_x, pos_y = int(np.round(self.source["x_centroid"][0])), int(np.round(self.source["y_centroid"][0]))
+        print(pos_x, pos_y)
+        self.centred_img = self.image[pos_y-100:pos_y+100, pos_x-100:pos_x+100]
+        return [pos_x, pos_y], self.centred_img
+
+    def radialPlot(self, max_r):
+        # stack asteroid images w/ asteroid centred and average them?
+
+        # use the source position as the central part when chopping every image up
+
+        pos, c_image = self.centreImage()
+        radii = np.arange(max_r)
+        rp = RadialProfile(self.image, pos, radii)
+        rp.plot(label="Instantanious asteroid radial profile")
+        plt.show()
+
+        return rp.radii, rp.profile, rp.profile_error
